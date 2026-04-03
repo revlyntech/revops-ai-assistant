@@ -35,7 +35,6 @@ def smart_fallback(data, company_name):
     }
 
 def generate_summary(data, company_name):
-    # Fallback used only if scraping totally fails
     if not data['content']:
         return smart_fallback(data, company_name) 
 
