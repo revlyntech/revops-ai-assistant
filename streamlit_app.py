@@ -3,14 +3,12 @@ from urllib.parse import urlparse
 import time
 from app import run_agent
 
-# 1. Page Configuration
 st.set_page_config(
     page_title="RevOps AI | Mini Sales Assistant",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 2. Custom CSS for SaaS-like appearance
 st.markdown("""
     <style>
         /* Hide ONLY the top-right menu and Deploy button, keeping the sidebar toggle intact */
@@ -78,13 +76,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Header Section 
 col_logo, col_title = st.columns([1.5, 8.5])
 with col_logo:
     try:
         st.image("assets/Logo_RevOps.png", width=250)
     except Exception:
-        st.write("⚡") # Fallback icon
+        st.write("⚡") 
 
 with col_title:
     st.markdown("<h1 style='margin-bottom: -10px; margin-top: 15px;'>RevOps Central | Mini AI Sales Assistant</h1>", unsafe_allow_html=True)
@@ -92,14 +89,12 @@ with col_title:
 
 st.divider()
 
-# 4. Sidebar Form
 with st.sidebar:
     st.markdown("### Lead Input")
     website = st.text_input("Company Website", placeholder="https://www.remitap.com/")
     
     st.markdown("### Custom ICP Criteria")
     
-    # --- UPDATED: Multi-select for Industry ---
     industry_options = [
         "SaaS", "Fintech", "HealthTech", "EdTech", "E-commerce", 
         "AI/ML", "Cybersecurity", "Logistics", "Real Estate", "Other"
@@ -110,14 +105,12 @@ with st.sidebar:
         default=["SaaS", "Fintech"] 
     )
     
-    # Grid-like layout for staff count
     c1, c2 = st.columns(2)
     with c1:
         min_size = st.number_input("Min Staff", 1, 10000, 10)
     with c2:
         max_size = st.number_input("Max Staff", 1, 10000, 200)
     
-    # --- UPDATED: Multi-select for Location ---
     location_options = [
         "United States", "Canada", "United Kingdom", "Europe", 
         "India", "Australia", "Asia Pacific", "Global"
@@ -128,7 +121,6 @@ with st.sidebar:
         default=["United States"]
     )
     
-    # Revenue inputs
     r1, r2 = st.columns(2)
     with r1:
         min_revenue = st.number_input("Min Rev ($M)", 1, 1000, 5)
@@ -138,14 +130,12 @@ with st.sidebar:
     st.write("") 
     submitted = st.button("Analyze Lead", use_container_width=True, type="primary")
 
-# 5. Main Execution Block
 if submitted and website:
     domain = urlparse(website).netloc.replace("www.", "")
     if not domain:
         domain = website.replace("www.", "").split('/')[0]
     company_name = domain.split(".")[0].title()
 
-    # --- UPDATED: Data structure for the agent (now passes lists) ---
     custom_icp = {
         "industry": target_industries,
         "min_size": min_size,
@@ -166,7 +156,6 @@ if submitted and website:
 
     st.success("Analysis Complete")
 
-    # 6. Layout for Results
     col_insights, col_icp = st.columns([1.4, 1], gap="large")
 
     with col_insights:
