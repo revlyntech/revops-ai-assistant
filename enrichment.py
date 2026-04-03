@@ -13,7 +13,6 @@ def scrape_website(url):
         }
         res = requests.get(url, timeout=7, headers=headers)
         
-        # Ensure we are using the correct character encoding
         res.encoding = res.apparent_encoding 
         
         soup = BeautifulSoup(res.text, "html.parser")
@@ -25,10 +24,8 @@ def scrape_website(url):
         for script in soup(["script", "style", "noscript"]):
             script.extract()
 
-        # Extract text and clean out weird invisible characters
         raw_text = soup.get_text(" ", strip=True)[:3000]
         
-        # THIS IS THE FIX: Forces the text to only use standard readable characters
         clean_text = raw_text.encode('ascii', 'ignore').decode('ascii')
 
         return {
