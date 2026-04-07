@@ -1,6 +1,9 @@
 import streamlit as st
 from urllib.parse import urlparse
 import time
+import os
+import tempfile
+from fpdf import FPDF
 from app import run_agent
 
 st.set_page_config(
@@ -11,21 +14,15 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-        /* Hide ONLY the top-right menu and Deploy button, keeping the sidebar toggle intact */
         #MainMenu {visibility: hidden;}
         .stDeployButton {display: none;}
         footer {visibility: hidden;}
-        
-        /* Ensures the header background is transparent so it blends cleanly */
         header {background-color: transparent !important;}
-        
-        /* Ensures the header alignment is tight and professional */
         .header-container {
             display: flex;
             align-items: center;
             gap: 20px;
         }
-
         .icp-badge-yes {
             background-color: rgba(36, 172, 85, 0.15);
             border-radius: 8px;
@@ -71,10 +68,63 @@ st.markdown("""
         .dot-yes { background-color: #24AC55; box-shadow: 0 0 8px #24AC55; }
         .dot-maybe { background-color: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
         .dot-no { background-color: #EF4444; box-shadow: 0 0 8px #EF4444; }
-        
         .stProgress > div > div > div > div { background-color: #3b82f6; }
     </style>
 """, unsafe_allow_html=True)
+
+def generate_pdf(company_name, result):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    try:
+        pdf.image("assets/Logo_RevOps.png", x=85, y=10, w=40)
+        pdf.set_y(35) 
+    except Exception:
+        pdf.set_y(20)
+        
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "RevOps Central | AI Sales Analysis Report", ln=True, align="C")
+    pdf.ln(8)
+    
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, f"Target Company: {company_name}", ln=True)
+    pdf.ln(2)
+    
+    pdf.set_font("Arial", '', 11)
+    pdf.multi_cell(0, 8, f"Summary: {result.get('company_summary', 'N/A')}")
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, "Firmographics:", ln=True)
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(0, 8, f"- Industry: {result.get('industry', 'N/A')}", ln=True)
+    pdf.cell(0, 8, f"- Size: {result.get('estimated_size', 'N/A')}", ln=True)
+    pdf.cell(0, 8, f"- Location: {result.get('location', 'N/A')}", ln=True)
+    pdf.cell(0, 8, f"- Revenue: {result.get('revenue_range', 'N/A')}", ln=True)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "ICP Qualification:", ln=True)
+    pdf.set_font("Arial", '', 11)
+    pdf.cell(0, 8, f"- Fit: {result.get('icp_fit', 'N/A')}", ln=True)
+    pdf.cell(0, 8, f"- Score: {result.get('icp_score', 'N/A')}/100", ln=True)
+    pdf.multi_cell(0, 8, f"- Match Drivers: {result.get('reason', 'N/A')}")
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 10, "AI-Generated Outreach Email:", ln=True)
+    pdf.set_font("Arial", '', 11)
+    
+    email_text = result.get("outreach_email", "")
+    pdf.multi_cell(0, 6, email_text)
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        pdf.output(tmp.name)
+        with open(tmp.name, "rb") as f:
+            pdf_bytes = f.read()
+    os.unlink(tmp.name)
+    
+    return pdf_bytes
 
 col_logo, col_title = st.columns([1.5, 8.5])
 with col_logo:
@@ -104,6 +154,9 @@ with st.sidebar:
         options=industry_options, 
         default=["SaaS", "Fintech"] 
     )
+    custom_industry = st.text_input("Add Custom Industry", placeholder="e.g. Web3, AgTech")
+    if custom_industry:
+        target_industries.append(custom_industry)
     
     c1, c2 = st.columns(2)
     with c1:
@@ -120,6 +173,9 @@ with st.sidebar:
         options=location_options, 
         default=["United States"]
     )
+    custom_location = st.text_input("Add Custom Location", placeholder="e.g. Germany, Tokyo")
+    if custom_location:
+        target_locations.append(custom_location)
     
     r1, r2 = st.columns(2)
     with r1:
@@ -201,6 +257,17 @@ if submitted and website:
 
     st.markdown("### Personalized Outreach")
     st.text_area("Generated Email Draft", result.get("outreach_email", ""), height=220, label_visibility="collapsed")
+
+    st.divider()
+    st.markdown("### Next Steps")
+
+    pdf_bytes = generate_pdf(company_name, result)
+    st.download_button(
+        label="📄 Export Report to PDF",
+        data=pdf_bytes,
+        file_name=f"{company_name}_RevOps_Analysis.pdf",
+        mime="application/pdf"
+    )
 
 elif submitted and not website:
     st.error("Please enter a valid website URL in the sidebar to begin analysis.")
