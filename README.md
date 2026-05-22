@@ -118,10 +118,3 @@ Final classification:
 - Multi-language outreach email support.
 - Slack and email notification on high-fit leads.
 
-## License
-
-This project is released under the MIT License. See the LICENSE file for details.
-
-## Author
-
-Built as a portfolio project to demonstrate practical applications of LLM agents in revenue operations and B2B sales workflows.
